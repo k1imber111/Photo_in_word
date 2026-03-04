@@ -13,6 +13,7 @@ from .utils import (
     get_grid_dimensions,
     calculate_image_size,
     set_cell_margins,
+    set_table_borders_none,
     add_page_number_field,
 )
 
@@ -69,7 +70,10 @@ class PhotoDocumentBuilder:
         add_page_number_field(run, "PAGE")
 
     def add_page_with_photos(self, photo_paths: list[Path]) -> None:
-        """Добавляет страницу с фотографиями в сетке."""
+        """
+        Добавляет страницу с фотографиями в сетке.
+        Размеры ячеек и изображений рассчитываются с сохранением пропорций (contain).
+        """
         if not photo_paths:
             return
 
@@ -103,6 +107,7 @@ class PhotoDocumentBuilder:
         table = self.document.add_table(rows=rows, cols=cols)
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        set_table_borders_none(table)  # невидимая таблица по ТЗ
 
         for row in table.rows:
             row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY

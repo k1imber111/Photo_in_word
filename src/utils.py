@@ -9,7 +9,7 @@ from docx.oxml.ns import qn
 def _is_portrait_dominant(photo_paths: list[Path]) -> bool:
     """
     Возвращает True, если большинство фото вертикальные (portrait).
-    Порог: height/width > 1.05 → portrait.
+    По ТЗ: portrait — высота ≥ ширины.
     """
     from .image_loader import get_image_dimensions
 
@@ -20,7 +20,7 @@ def _is_portrait_dominant(photo_paths: list[Path]) -> bool:
         dims = get_image_dimensions(path)
         if dims:
             w, h = dims
-            if w > 0 and h / w > 1.05:
+            if h >= w:
                 portrait_count += 1
     return portrait_count > len(photo_paths) / 2
 
@@ -31,10 +31,8 @@ def get_grid_dimensions(
 ) -> tuple[int, int]:
     """
     Возвращает (rows, cols) для сетки фотографий на альбомной странице.
-
-    Для альбомной страницы (ширина > высоты):
-    - Portrait (вертикальные фото): больше столбцов (1×2, 2×2, 2×3)
-    - Landscape (горизонтальные фото): больше рядов (2×1, 3×1, 3×2)
+    Алгоритм: по количеству фото на странице и преобладающей ориентации
+    выбирается оптимальная сетка (например, 4 фото → 2×2, 2 фото → 1×2 или 2×1).
     """
     portrait = _is_portrait_dominant(photo_paths) if photo_paths else False
 
@@ -123,6 +121,23 @@ def set_cell_margins(cell, top: float = 0, start: float = 0, bottom: float = 0, 
             tc_mar.append(node)
 
     tc_pr.append(tc_mar)
+
+
+def set_table_borders_none(table) -> None:
+    """
+    Убирает границы таблицы (невидимая таблица по ТЗ).
+    Устанавливает границы каждой ячейки (tcBorders) в nil через OOXML.
+    """
+    for row in table.rows:
+        for cell in row.cells:
+            tc = cell._tc
+            tc_pr = tc.get_or_add_tcPr()
+            tc_borders = OxmlElement("w:tcBorders")
+            for side in ("top", "left", "bottom", "right"):
+                node = OxmlElement(f"w:{side}")
+                node.set(qn("w:val"), "nil")
+                tc_borders.append(node)
+            tc_pr.append(tc_borders)
 
 
 def add_page_number_field(run, field_code: str = "PAGE"):

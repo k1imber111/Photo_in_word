@@ -82,17 +82,13 @@ def _is_valid_image(path: Path) -> bool:
         return False
 
 
-PORTRAIT_RATIO_THRESHOLD = 1.05  # height/width > 1.05 → portrait
-
-
-def group_images_by_orientation(paths: list[Path]) -> list[list[Path]]:
+def group_images_by_orientation(paths: list[Path]) -> tuple[list[Path], list[Path]]:
     """
-    Группирует фото по ориентации: вертикальные (portrait) и горизонтальные (landscape).
-
-    Порог: height/width > 1.05 → portrait, иначе landscape.
+    Группирует фото по ориентации (ТЗ): книжная (portrait) — высота ≥ ширины;
+    альбомная (landscape) — ширина > высоты. Квадрат считается portrait.
 
     Returns:
-        [portrait_paths, landscape_paths]
+        (portrait_paths, landscape_paths)
     """
     portrait: list[Path] = []
     landscape: list[Path] = []
@@ -101,14 +97,14 @@ def group_images_by_orientation(paths: list[Path]) -> list[list[Path]]:
         dims = get_image_dimensions(path)
         if dims:
             w, h = dims
-            if w > 0 and h / w > PORTRAIT_RATIO_THRESHOLD:
+            if h >= w:
                 portrait.append(path)
             else:
                 landscape.append(path)
         else:
             landscape.append(path)  # при ошибке — в landscape
 
-    return [portrait, landscape]
+    return (portrait, landscape)
 
 
 def get_image_dimensions(path: Path) -> tuple[int, int] | None:

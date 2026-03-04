@@ -10,3 +10,16 @@ dist/
 .eggs/
 test_photos/
 *.docx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# Environment
+.env
+.env.local
